@@ -10,9 +10,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class Map {
-	private ArrayList<ArrayList<Tile>> grid;
-	private Tile current;
-	private ArrayList<Tile> route;
+	private ArrayList<ArrayList<MapTile>> grid;
+	private MapTile current;
+	private ArrayList<MapTile> route;
 	private int totalCost  = 0;
 	private String map;
 	
@@ -23,36 +23,37 @@ public class Map {
 	public void readMap() throws FileNotFoundException {
 		BufferedReader br = new BufferedReader(new FileReader(map));
 		String line = null;
-		ArrayList<Tile> colList = null;
+		ArrayList<MapTile> colList = null;
 		int rowNr = 0;
 		
 		try {
+			System.out.println("Reading map");
 			line = br.readLine();
 			while (line != null) {
 				char[] cols = line.toCharArray();
-				colList = new ArrayList<Tile>();
+				colList = new ArrayList<MapTile>();
 				for (int i = 0; i < cols.length; i++) {
-					Tile tile = new Tile();
-					Coordinate coord = new Coordinate(rowNr, i);
+					MapTile tile = new MapTile();
+					MapCoord coord = new MapCoord(rowNr, i);
 					tile.setMapPosition(coord);
 					tile.setType(cols[i]);
 					colList.add(tile);
 				}
-				grid.add(colList);
-				br.readLine();
+				getGrid().add(colList);
+				line = br.readLine();
 				rowNr++;
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		System.out.println("Map read");
 		
 	}
 	
 	public void mapRoute() {
 		File file = new File(map);
-		String path = file.getPath();
-		String fileName = path + File.separatorChar + "Map_Solution.txt";
+		String fileName = "Map_Solution.txt";
 
 		try {
 			file = new File(fileName);
@@ -61,9 +62,9 @@ public class Map {
 			}
 			file.createNewFile();
 			BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-			for (ArrayList<Tile> row : grid) {
+			for (ArrayList<MapTile> row : grid) {
 				StringBuilder sb = new StringBuilder();
-				for (Tile tile : row) {
+				for (MapTile tile : row) {
 					sb.append(tile.getType());
 					if (getRoute().contains(tile)) {
 						sb.append("#");
@@ -75,40 +76,58 @@ public class Map {
 			writer.close();
 		} catch (Exception e) {
 			System.out.println("Error occured while writing route.");
+			e.printStackTrace();
 		}
 		
 	}
 	
-	public Tile fetchStart() {
+	public MapTile fetchStart() {
 		return grid.get(0).get(0);
 	}
 	
-	public Tile fetchFinish() {
-		ArrayList<Tile> lastRow = grid.get(grid.size() - 1);
+	public MapTile fetchFinish() {
+		ArrayList<MapTile> lastRow = grid.get(grid.size() - 1);
 		return lastRow.get(lastRow.size() - 1);
 	}
 
-	public ArrayList<ArrayList<Tile>> getGrid() {
+	public boolean isOffMap(int row, int col) {
+		MapTile finish = fetchFinish();
+		
+		if (row > finish.getMapPosition().getRow()) {
+			return true;
+		}
+		if (col > finish.getMapPosition().getCol()) {
+			return true;
+		}
+		return false;
+	}
+	public ArrayList<ArrayList<MapTile>> getGrid() {
+		if (grid == null) {
+			grid = new ArrayList<ArrayList<MapTile>>();
+		}
 		return grid;
 	}
 
-	public void setGrid(ArrayList<ArrayList<Tile>> grid) {
+	public void setGrid(ArrayList<ArrayList<MapTile>> grid) {
 		this.grid = grid;
 	}
 
-	public Tile getCurrent() {
+	public MapTile getCurrent() {
 		return current;
 	}
 
-	public void setCurrent(Tile current) {
+	public void setCurrent(MapTile current) {
 		this.current = current;
 	}
 
-	public ArrayList<Tile> getRoute() {
+	public ArrayList<MapTile> getRoute() {
+		if (route == null) {
+			route = new ArrayList<MapTile>();
+		}
 		return route;
 	}
 
-	public void setRoute(ArrayList<Tile> route) {
+	public void setRoute(ArrayList<MapTile> route) {
 		this.route = route;
 	}
 

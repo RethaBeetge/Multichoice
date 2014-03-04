@@ -1,10 +1,10 @@
 package com.multichoice.navigation.map;
 
-public class Coordinate {
+public class MapCoord {
 	private int row;
 	private int col;
 	
-	public Coordinate(int row, int col) {
+	public MapCoord(int row, int col) {
 		this.row = row;
 		this.col = col;
 	}

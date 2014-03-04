@@ -3,7 +3,7 @@ package com.multichoice.navigation;
 import java.util.ArrayList;
 
 import com.multichoice.navigation.map.Map;
-import com.multichoice.navigation.map.Tile;
+import com.multichoice.navigation.map.MapTile;
 import com.multichoice.navigation.rules.RuleEngine;
 
 public class Navigator {
@@ -11,6 +11,7 @@ public class Navigator {
 	private static final char FLATLAND = '.';
 	private static final char FORREST = '*';
 	private static final char MOUNTAIN = '^';
+	private static final char FINISH = 'X';
 	
 	/**
 	 * @param args
@@ -27,47 +28,55 @@ public class Navigator {
 				map.mapRoute();
 			} catch (Exception e) {
 				System.out.println("Error reading specifid file: "+args[0]);
+				e.printStackTrace();
 			}
 		}
 
 	}
 	
 	public void walkMap(Map map) {
-		Tile end = map.fetchFinish();
-		Tile current = map.fetchStart();
+		MapTile end = map.fetchFinish();
+		MapTile current = map.fetchStart();
 		
 		map.setCurrent(current);
 		// We've reached the end when the current tile is the final tile
-		while (current != end) {
-			Tile nextTile = next(map, current);
-			if (!RuleEngine.isWalkable(nextTile)) {
-				ArrayList<Tile> detour = detour(map);
-				map.getRoute().addAll(detour);
-				map.setTotalCost(map.getTotalCost() + calculateDetourCost(map, detour));
-				current = detour.get(detour.size()-1);
+		do {
+			MapTile nextTile = next(map, current);
+			if (nextTile == null) {
+				break;
+			}
+			if (!RuleEngine.isWalkable(nextTile) && FINISH != nextTile.getType()) {
+				ArrayList<MapTile> detourRoute = detour(map);
+				map.getRoute().addAll(detourRoute);
+				map.setTotalCost(map.getTotalCost() + calculateDetourCost(map, detourRoute));
+				current = detourRoute.get(detourRoute.size()-1);
 			} else {
 				map.getRoute().add(nextTile);
 				map.setTotalCost(map.getTotalCost() + moveCost(map.fetchFinish(), nextTile));
 				current = nextTile;
 			}
+			map.setCurrent(current);
 
-		}
+		} while (FINISH != current.getType());
 	}
 	
-	private Tile next(Map map, Tile current) {
-		Tile next = null;
+	private MapTile next(Map map, MapTile current) {
+		MapTile next = null;
 
 		int row = current.getMapPosition().getRow() + 1;
 		int col = current.getMapPosition().getCol() + 1;
 		
+		if (map.isOffMap(row, col)) {
+			return null;
+		}
 		next = map.getGrid().get(row).get(col);
 		
 		return next;
 	}
 	
-	private ArrayList<Tile> detour(Map map) {
-		ArrayList<Tile> detourRight = detourRight(map);
-		ArrayList<Tile> detourDown = detourDown(map);
+	private ArrayList<MapTile> detour(Map map) {
+		ArrayList<MapTile> detourRight = detourRight(map);
+		ArrayList<MapTile> detourDown = detourDown(map);
 		int dtDownCost = calculateDetourCost(map, detourDown);
 		int dtRightCost = calculateDetourCost(map, detourRight);
 		if (dtDownCost < 0 ) {
@@ -79,18 +88,18 @@ public class Navigator {
 		return dtDownCost < dtRightCost?detourDown:detourRight;
 	}
 	
-	private int calculateDetourCost(Map map, ArrayList<Tile> detour) {
+	private int calculateDetourCost(Map map, ArrayList<MapTile> detour) {
 		int cost = 0;
 		if (detour == null || detour.isEmpty()) {
 			return -1;
 		}
-		for (Tile tile:detour) {
+		for (MapTile tile:detour) {
 			cost += moveCost(map.fetchFinish(), tile);
 		}
 		return cost;
 	}
 	
-	private int moveCost(Tile finish, Tile tile) {
+	private int moveCost(MapTile finish, MapTile tile) {
 		int cost = 0;
 		
 		int rowDiff = finish.getMapPosition().getRow() - tile.getMapPosition().getRow();
@@ -108,43 +117,61 @@ public class Navigator {
 		return cost;
 	}
 	
-	private ArrayList<Tile> detourRight(Map map) {
-		ArrayList<Tile> detour = new ArrayList<Tile>();
-		Tile next = null;
+	private ArrayList<MapTile> detourRight(Map map) {
+		ArrayList<MapTile> detour = new ArrayList<MapTile>();
+		MapTile next = null;
 		int right = map.getCurrent().getMapPosition().getCol()+1;
+		if (map.isOffMap(map.getCurrent().getMapPosition().getRow(), right)) {
+			return null;
+		}
 		next = map.getGrid().get(map.getCurrent().getMapPosition().getRow()).get(right);
 		if (!RuleEngine.isWalkable(next)) {
 			return null;
 		}
 		detour.add(next);
 		next = next(map, next);
+		if (next == null) {
+			return null;
+		}
 		if (!RuleEngine.isWalkable(next)) {
 			return null;
 		}
 		detour.add(next);
 		int down = next.getMapPosition().getRow()+1;
+		if (map.isOffMap(down, next.getMapPosition().getCol())) {
+			return null;
+		}
 		next = map.getGrid().get(down).get(next.getMapPosition().getCol());
 		detour.add(next);
 		
 		return detour;
 	}
 	
-	private ArrayList<Tile> detourDown(Map map) {
-		ArrayList<Tile> detour = new ArrayList<Tile>();
-		Tile next = null;
+	private ArrayList<MapTile> detourDown(Map map) {
+		ArrayList<MapTile> detour = new ArrayList<MapTile>();
+		MapTile next = null;
 		
 		int down = map.getCurrent().getMapPosition().getRow()+1;
+		if (map.isOffMap(down, map.getCurrent().getMapPosition().getCol())) {
+			return null;
+		}
 		next = map.getGrid().get(down).get(map.getCurrent().getMapPosition().getCol());
 		if (!RuleEngine.isWalkable(next)) {
 			return null;
 		}
 		detour.add(next);
 		next = next(map, next);
+		if (next == null) {
+			return null;
+		}
 		if (!RuleEngine.isWalkable(next)) {
 			return null;
 		}
 		detour.add(next);
 		int right = next.getMapPosition().getCol()+1;
+		if (map.isOffMap(next.getMapPosition().getRow(), right)) {
+			return null;
+		}
 		next = map.getGrid().get(next.getMapPosition().getRow()).get(right);
 		if (!RuleEngine.isWalkable(next)) {
 			return null;
@@ -154,5 +181,4 @@ public class Navigator {
 		return detour;
 		
 	}
-
 }

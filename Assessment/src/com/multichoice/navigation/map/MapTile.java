@@ -1,10 +1,10 @@
 package com.multichoice.navigation.map;
 
-public class Tile {
+public class MapTile {
 	private char type;
-	private Coordinate mapPosition;
+	private MapCoord mapPosition;
 	
-	public Tile() {
+	public MapTile() {
 	}
 	
 	public char getType() {
@@ -15,10 +15,10 @@ public class Tile {
 		this.type = type;
 	}
 
-	public Coordinate getMapPosition() {
+	public MapCoord getMapPosition() {
 		return mapPosition;
 	}
-	public void setMapPosition(Coordinate position) {
+	public void setMapPosition(MapCoord position) {
 		mapPosition = position;
 	}
 }

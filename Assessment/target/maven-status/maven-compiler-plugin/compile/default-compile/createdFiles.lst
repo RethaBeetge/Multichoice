@@ -1,0 +1,5 @@
+com\multichoice\navigation\map\MapTile.class
+com\multichoice\navigation\Navigator.class
+com\multichoice\navigation\map\MapCoord.class
+com\multichoice\navigation\map\Map.class
+com\multichoice\navigation\rules\RuleEngine.class

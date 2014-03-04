@@ -3,12 +3,12 @@ package com.multichoice.navigation.rules;
 import java.util.Arrays;
 import java.util.List;
 
-import com.multichoice.navigation.map.Tile;
+import com.multichoice.navigation.map.MapTile;
 
 
 public class RuleEngine {
 	
-	public static boolean isWalkable(Tile tile) {
+	public static boolean isWalkable(MapTile tile) {
 		List<Character> walkables = Arrays.asList('.','*','^');
 		boolean isWalkable = false;
 		
@@ -17,7 +17,7 @@ public class RuleEngine {
 		return isWalkable;
 	}
 	
-	public static boolean isForward(Tile current, Tile next) {
+	public static boolean isForward(MapTile current, MapTile next) {
 		boolean isForward = false;
 		int colMove = 0;
 		int rowMove = 0;
